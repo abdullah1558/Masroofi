@@ -1,0 +1,634 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#198754">
+    <meta name="description" content="مصروفي - تطبيق بسيط لإدارة المصروفات والميزانية وتحليل الإنفاق.">
+
+    <title>مصروفي | Masroofi</title>
+
+    <link rel="stylesheet" href="./style.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
+    <script src="./script.js" defer></script>
+</head>
+
+<body>
+
+    <header class="header">
+        <div class="container header-content">
+
+            <a href="#" class="brand" id="brand-link">
+                <div class="brand-icon">
+                    <img src="./logo.svg" alt="شعار مصروفي">
+                </div>
+
+                <div>
+                    <h1 id="brand-title">مصروفي <span>Masroofi</span></h1>
+                    <p data-i18n="tagline">تابع مصروفاتك وتحكّم بميزانيتك</p>
+                </div>
+            </a>
+
+            <div class="header-actions">
+                <button id="language-button" class="secondary-button" type="button">
+                    English
+                </button>
+
+                <button id="analytics-button" class="primary-button" type="button">
+                    <span>▥</span>
+                    <span data-i18n="analytics">التحليلات</span>
+                </button>
+            </div>
+
+        </div>
+    </header>
+
+    <main class="container main-content">
+
+        <!-- Authentication -->
+
+        <section id="auth-page" class="auth-page">
+            <div class="auth-card">
+
+                <img src="./logo.svg" alt="Masroofi" class="auth-logo">
+
+                <h2 id="auth-title">تسجيل الدخول</h2>
+
+                <p id="auth-description">
+                    سجّل دخولك لمتابعة مصروفاتك من أي جهاز.
+                </p>
+
+                <form id="auth-form">
+
+                    <label for="auth-email">البريد الإلكتروني</label>
+
+                    <input
+                        id="auth-email"
+                        type="email"
+                        placeholder="name@example.com"
+                        autocomplete="email"
+                        required
+                    >
+
+                    <label for="auth-password">كلمة المرور</label>
+
+                    <input
+                        id="auth-password"
+                        type="password"
+                        placeholder="••••••••"
+                        autocomplete="current-password"
+                        minlength="6"
+                        required
+                    >
+
+                    <button
+                        id="auth-submit"
+                        type="submit"
+                        class="primary-button"
+                    >
+                        تسجيل الدخول
+                    </button>
+
+                </form>
+
+                <button
+                    id="google-login"
+                    type="button"
+                    class="secondary-button"
+                >
+                    المتابعة باستخدام Google
+                </button>
+
+                <p id="auth-message" role="status" aria-live="polite"></p>
+
+                <button
+                    id="auth-switch"
+                    type="button"
+                    class="text-button"
+                >
+                    ليس لديك حساب؟ أنشئ حسابًا
+                </button>
+
+            </div>
+        </section>
+
+        <!-- Signed-in user information -->
+
+        <div id="user-bar" class="user-bar hidden">
+            <span id="user-email"></span>
+
+            <button
+                id="logout-button"
+                class="secondary-button"
+                type="button"
+            >
+                تسجيل الخروج
+            </button>
+        </div>
+
+        <!-- Home / Dashboard -->
+
+        <section id="home-page" class="hidden">
+
+            <div class="welcome-row">
+                <div>
+                    <p class="eyebrow" data-i18n="overview">نظرة عامة</p>
+                    <h2 data-i18n="dashboard">لوحة التحكم</h2>
+                    <p class="muted" data-i18n="dashboard-desc">
+                        كل مصروفاتك في مكان واحد.
+                    </p>
+                </div>
+
+                <div class="today-badge">
+                    <span>◷</span>
+                    <span id="today-label"></span>
+                </div>
+            </div>
+
+            <!-- Summary cards -->
+
+            <section class="summary">
+
+                <article class="summary-card">
+                    <div class="card-top">
+                        <span class="card-icon green-icon">↗</span>
+                        <span class="card-label" data-i18n="total-expenses">
+                            إجمالي المصروفات
+                        </span>
+                    </div>
+
+                    <h2 id="total-expenses">0.00 ر.س</h2>
+
+                    <p class="card-note" data-i18n="all-recorded">
+                        جميع المصروفات المسجلة
+                    </p>
+                </article>
+
+                <article class="summary-card">
+                    <div class="card-top">
+                        <span class="card-icon blue-icon">▤</span>
+                        <span class="card-label" data-i18n="expense-count">
+                            عدد المصروفات
+                        </span>
+                    </div>
+
+                    <h2 id="expenses-count">0</h2>
+
+                    <p class="card-note" data-i18n="transactions">
+                        عملية مسجلة
+                    </p>
+                </article>
+
+                <article class="summary-card">
+                    <div class="card-top">
+                        <span class="card-icon orange-icon">◷</span>
+                        <span class="card-label" data-i18n="monthly-budget">
+                            الميزانية الشهرية
+                        </span>
+                    </div>
+
+                    <h2 id="budget-value">1,000.00 ر.س</h2>
+
+                    <button
+                        id="edit-budget-button"
+                        class="text-button"
+                        type="button"
+                        data-i18n="edit-budget"
+                    >
+                        تعديل الميزانية
+                    </button>
+                </article>
+
+                <article class="summary-card">
+                    <div class="card-top">
+                        <span class="card-icon purple-icon">◎</span>
+                        <span class="card-label" data-i18n="remaining">
+                            المتبقي هذا الشهر
+                        </span>
+                    </div>
+
+                    <h2 id="remaining-value">1,000.00 ر.س</h2>
+
+                    <div class="progress-track">
+                        <div id="budget-progress" class="progress-fill"></div>
+                    </div>
+
+                    <p id="budget-status" class="card-note"></p>
+                </article>
+
+            </section>
+
+            <!-- Expenses -->
+
+            <section class="expenses-section">
+
+                <div class="section-header">
+                    <div>
+                        <p class="eyebrow" data-i18n="transactions-label">
+                            المعاملات
+                        </p>
+
+                        <h2 data-i18n="my-expenses">مصروفاتي</h2>
+
+                        <p class="muted" data-i18n="expenses-desc">
+                            تابع مصروفاتك اليومية بكل سهولة.
+                        </p>
+                    </div>
+
+                    <button
+                        id="show-form-button"
+                        class="primary-button"
+                        type="button"
+                    >
+                        + <span data-i18n="add-expense">إضافة مصروف</span>
+                    </button>
+                </div>
+
+                <!-- Add / edit expense form -->
+
+                <form id="expense-form" class="expense-form hidden">
+
+                    <div class="form-heading">
+                        <div>
+                            <h3 id="form-title" data-i18n="new-expense">
+                                إضافة مصروف جديد
+                            </h3>
+
+                            <p class="muted" data-i18n="form-desc">
+                                أدخل تفاصيل العملية.
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            id="cancel-button"
+                            class="icon-button"
+                            aria-label="إغلاق النموذج"
+                        >
+                            ✕
+                        </button>
+                    </div>
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+                            <label for="expense-name" data-i18n="expense-name">
+                                اسم المصروف
+                            </label>
+
+                            <input
+                                id="expense-name"
+                                type="text"
+                                maxlength="100"
+                                placeholder="مثال: قهوة"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="expense-amount" data-i18n="amount">
+                                المبلغ (ر.س)
+                            </label>
+
+                            <input
+                                id="expense-amount"
+                                type="number"
+                                min="0.01"
+                                max="100000000"
+                                step="0.01"
+                                placeholder="15.00"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="expense-category" data-i18n="category">
+                                التصنيف
+                            </label>
+
+                            <select id="expense-category" required>
+                                <option value="طعام ومشروبات" data-category="food">
+                                    طعام ومشروبات
+                                </option>
+
+                                <option value="مواصلات" data-category="transport">
+                                    مواصلات
+                                </option>
+
+                                <option value="تسوق" data-category="shopping">
+                                    تسوق
+                                </option>
+
+                                <option value="فواتير" data-category="bills">
+                                    فواتير
+                                </option>
+
+                                <option value="ترفيه" data-category="entertainment">
+                                    ترفيه
+                                </option>
+
+                                <option value="أخرى" data-category="other">
+                                    أخرى
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="expense-date" data-i18n="date">
+                                التاريخ
+                            </label>
+
+                            <input
+                                id="expense-date"
+                                type="date"
+                                required
+                            >
+                        </div>
+
+                    </div>
+
+                    <div class="form-actions">
+                        <button
+                            type="submit"
+                            id="save-button"
+                            class="primary-button"
+                            data-i18n="save-expense"
+                        >
+                            حفظ المصروف
+                        </button>
+
+                        <button
+                            type="button"
+                            id="cancel-form-button"
+                            class="secondary-button"
+                            data-i18n="cancel"
+                        >
+                            إلغاء
+                        </button>
+                    </div>
+
+                </form>
+
+                <!-- Search / filter / sort -->
+
+                <div class="toolbar">
+
+                    <div class="search-field">
+                        <span>⌕</span>
+
+                        <input
+                            id="search-expenses"
+                            type="search"
+                            placeholder="ابحث عن مصروف..."
+                            aria-label="البحث عن مصروف"
+                        >
+                    </div>
+
+                    <select id="filter-category" aria-label="تصفية حسب التصنيف">
+                        <option value="all" data-i18n="all-categories">
+                            جميع التصنيفات
+                        </option>
+
+                        <option value="طعام ومشروبات" data-category="food">
+                            طعام ومشروبات
+                        </option>
+
+                        <option value="مواصلات" data-category="transport">
+                            مواصلات
+                        </option>
+
+                        <option value="تسوق" data-category="shopping">
+                            تسوق
+                        </option>
+
+                        <option value="فواتير" data-category="bills">
+                            فواتير
+                        </option>
+
+                        <option value="ترفيه" data-category="entertainment">
+                            ترفيه
+                        </option>
+
+                        <option value="أخرى" data-category="other">
+                            أخرى
+                        </option>
+                    </select>
+
+                    <select id="sort-expenses" aria-label="ترتيب المصروفات">
+                        <option value="newest" data-i18n="newest">
+                            الأحدث أولًا
+                        </option>
+
+                        <option value="oldest" data-i18n="oldest">
+                            الأقدم أولًا
+                        </option>
+
+                        <option value="highest" data-i18n="highest">
+                            الأعلى مبلغًا
+                        </option>
+
+                        <option value="lowest" data-i18n="lowest">
+                            الأقل مبلغًا
+                        </option>
+                    </select>
+
+                </div>
+
+                <div class="list-heading">
+                    <h3 data-i18n="recent-expenses">سجل المصروفات</h3>
+                    <span id="visible-count" class="muted"></span>
+                </div>
+
+                <div id="expenses-list"></div>
+
+                <div id="empty-message" class="empty-state">
+                    <div class="empty-icon">₊</div>
+
+                    <h3 data-i18n="empty-title">
+                        لا توجد مصروفات حتى الآن
+                    </h3>
+
+                    <p data-i18n="empty-desc">
+                        أضف أول مصروف لك لتبدأ متابعة إنفاقك.
+                    </p>
+                </div>
+
+            </section>
+
+        </section>
+
+        <!-- Analytics -->
+
+        <section id="analytics-page" class="hidden">
+
+            <div class="welcome-row">
+                <div>
+                    <p class="eyebrow" data-i18n="insights">
+                        التقارير والإحصائيات
+                    </p>
+
+                    <h2 data-i18n="analytics-title">
+                        التحليلات المالية
+                    </h2>
+
+                    <p class="muted" data-i18n="analytics-desc">
+                        افهم عادات إنفاقك واتخذ قرارات أفضل.
+                    </p>
+                </div>
+
+                <button
+                    id="back-button"
+                    class="secondary-button"
+                    type="button"
+                    data-i18n="back"
+                >
+                    ← العودة للمصروفات
+                </button>
+            </div>
+
+            <section class="summary analytics-summary">
+
+                <article class="summary-card">
+                    <div class="card-top">
+                        <span class="card-icon green-icon">↗</span>
+                        <span class="card-label" data-i18n="total-expenses">
+                            إجمالي المصروفات
+                        </span>
+                    </div>
+
+                    <h2 id="analytics-total">0.00 ر.س</h2>
+
+                    <p class="card-note" data-i18n="all-recorded">
+                        جميع المصروفات المسجلة
+                    </p>
+                </article>
+
+                <article class="summary-card">
+                    <div class="card-top">
+                        <span class="card-icon purple-icon">◎</span>
+                        <span class="card-label" data-i18n="top-category">
+                            أكثر تصنيف إنفاقًا
+                        </span>
+                    </div>
+
+                    <h2 id="top-category">—</h2>
+                    <p id="top-category-amount" class="card-note"></p>
+                </article>
+
+                <article class="summary-card">
+                    <div class="card-top">
+                        <span class="card-icon blue-icon">◷</span>
+                        <span class="card-label" data-i18n="monthly-average">
+                            متوسط الإنفاق الشهري
+                        </span>
+                    </div>
+
+                    <h2 id="monthly-average">0.00 ر.س</h2>
+
+                    <p class="card-note" data-i18n="last-six-months">
+                        خلال آخر ستة أشهر
+                    </p>
+                </article>
+
+            </section>
+
+            <section class="charts-grid">
+
+                <article class="chart-card">
+                    <div class="chart-heading">
+                        <div>
+                            <h3 data-i18n="monthly-comparison">
+                                مقارنة المصروفات الشهرية
+                            </h3>
+
+                            <p class="muted" data-i18n="last-six-months">
+                                خلال آخر ستة أشهر
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="monthly-chart"></canvas>
+
+                        <p
+                            id="monthly-chart-fallback"
+                            class="chart-fallback hidden"
+                            data-i18n="chart-unavailable"
+                        >
+                            الرسوم البيانية غير متاحة حاليًا.
+                        </p>
+                    </div>
+                </article>
+
+                <article class="chart-card">
+                    <div class="chart-heading">
+                        <div>
+                            <h3 data-i18n="category-distribution">
+                                توزيع المصروفات
+                            </h3>
+
+                            <p class="muted" data-i18n="by-category">
+                                حسب التصنيف
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="category-chart"></canvas>
+
+                        <p
+                            id="category-chart-fallback"
+                            class="chart-fallback hidden"
+                            data-i18n="chart-unavailable"
+                        >
+                            الرسوم البيانية غير متاحة حاليًا.
+                        </p>
+                    </div>
+                </article>
+
+                <article class="chart-card full-width">
+                    <div class="chart-heading">
+                        <div>
+                            <h3 data-i18n="category-details">
+                                تفاصيل الإنفاق حسب التصنيف
+                            </h3>
+
+                            <p class="muted" data-i18n="category-details-desc">
+                                نسبة كل تصنيف من إجمالي المصروفات.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div id="category-breakdown"></div>
+                </article>
+
+            </section>
+
+        </section>
+
+        <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    </main>
+
+    <!-- Footer -->
+
+    <footer class="footer">
+        <div class="brand-footer">
+            <img src="./logo.svg" alt="شعار مصروفي">
+        </div>
+
+        <p>
+            <strong>Masroofi</strong> —
+            <span data-i18n="footer">إدارة أموالك تبدأ بخطوة.</span>
+        </p>
+
+        <p class="footer-note">
+            Personal Finance Tracker · Built with HTML, CSS & JavaScript
+        </p>
+    </footer>
+
+</body>
+</html>
